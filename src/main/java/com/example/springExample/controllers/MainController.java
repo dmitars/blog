@@ -2,10 +2,10 @@ package com.example.springExample.controllers;
 
 import com.example.springExample.repo.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -26,12 +26,9 @@ public class MainController {
         return "home";
     }
 
-    @GetMapping("/access-denied")
-    public String blockAccess(Model model){
-        return "access-denied";
-    }
 
-    @PostMapping("/access-denied")
+    @RequestMapping(value = "/access-denied", method = {RequestMethod.POST,RequestMethod.GET})
+    @ResponseStatus(HttpStatus.OK)
     public String actionAccess(Model model){
         return "access-denied";
     }
