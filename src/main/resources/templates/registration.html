@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <title>Авторизация </title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+        <header th:insert="blocks/login :: login_style"/>
+    </head>
+    <body class="text=center">
+
+        <div class="container">
+            <div class="row">
+
+                <div class="col-md-offset-3 col-md-6">
+                    <form action="/registration" method="post" class="form-horizontal">
+                        <span class="heading">АВТОРИЗАЦИЯ</span>
+                        <div class="form-group">
+                            <input type="text" name="username" class="form-control" id="inputEmail" placeholder="Логин">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div class="form-group help">
+                            <input type="password" name="password" class="form-control" id="inputPassword" placeholder="Пароль">
+                        </div>
+                        <div class="form-group help">
+                            <input type="password" name="repeat_password" class="form-control" id="repeatPassword" placeholder="Повторите пароль">
+                        </div>
+                        <div th:text="${message}"/><br>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-default">ЗАРЕГИСТРИРОВАТЬ</button>
+                        </div>
+                    </form>
+                </div>
+
+            </div><!-- /.row -->
+        </div>
+
+    </body>
+
+</html>
+
