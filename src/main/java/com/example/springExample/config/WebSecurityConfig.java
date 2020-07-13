@@ -1,6 +1,5 @@
 package com.example.springExample.config;
 
-import com.example.springExample.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,12 +19,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private DataSource dataSource;
 
-    @Autowired
-    private UserService userService;
-
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-      //  auth.inMemoryAuthentication().withUser("admin").password("admin").roles("ADMIN");
         auth.jdbcAuthentication()
                 .dataSource(dataSource)
                 .passwordEncoder(NoOpPasswordEncoder.getInstance())
