@@ -1,0 +1,9 @@
+<div th:fragment="main-info">
+    <div class="mb-1 text-muted">
+        <div align="right" th:text="${el.author}"></div>
+        <div align="right" th:text="${el.date}"></div>
+    </div>
+    <h3 th:text="${el.title}" class="mb-0"></h3><br>
+    <p th:text="${el.anons}" class="card-text mb-auto"></p>
+    <a th:href="'/blog/'+${el.id}">Подробнее</a><br>
+</div>

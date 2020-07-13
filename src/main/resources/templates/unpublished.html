@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${title}"></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/blog-main.css">
+    <header th:insert="blocks/style :: bg-style"/>
+</head>
+<body>
+<div class="container">
+    <header th:insert="blocks/header :: header"/>
+    <div class="jumbotron p-4 p-md-5 text-white rounded bg-dark">
+        <div class="col-md-6 px-0">
+            <h1 class="display-4 font-italic">Предложенное</h1>
+            <p class="lead my-3">Предложенные, но неопубликованные статьи</p>
+        </div>
+    </div>
+
+    <div class="container mx-0 row p-4 mb-2 bg-white">
+        <div th:each="el : ${posts}" class="col-md-6">
+            <div class="row no-gutters border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
+                <div class="col p-4 d-flex flex-column position-static">
+                    <header th:insert="blocks/article :: main-info"/>
+                    <form th:action="'/unpublished/'+${el.id}+'/confirm'" method="post">
+                        <p align="right">
+                            <button class = "btn btn-warning" type="submit">Добавить</button>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <header th:insert="blocks/footer :: footer"/>
+</div>
+
+
+</body>
+</html>

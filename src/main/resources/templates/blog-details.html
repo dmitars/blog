@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Блог сайта</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+        <header th:insert="blocks/style :: bg-style"/>
+    </head>
+    <body>
+        <header th:insert="blocks/header :: header"/>
+        <div class="container p-4 mt-5 bg-white">
+            <div th:each="el : ${post}" class="alert alert-info mt-2">
+                <h1 th:text="${el.title}"></h1><br>
+                <p th:text="${el.fullText}"></p>
+                <p><b>Просмотры: </b> <span th:text="''+${el.views}"/></p>
+                <a th:href="'/blog/'+${el.id}+'/edit'" class="btn btn-warning">Редактировать</a><br><br>
+                <form th:action="'/blog/'+${el.id}+'/remove'" method="post">
+                    <button class = "btn btn-warning" type="submit">Удалить</button>
+                </form>
+                <br>
+                <form th:action="'/blog/'+${el.id}+'/comment'" method="post">
+                    <textarea type="text" name="comment" placeholder="Комментарий" class="form-control"></textarea><br>
+                    <button class = "btn btn-warning" type="submit">Добавить комментарий</button>
+                </form>
+                <p align="right" th:text="${el.date}"></p>
+            </div>
+        </div>
+
+        <div class="container p-4 mt-5 bg-light">
+            <h1>Комментарии</h1><br><br>
+            <div th:each="el : ${comments}" class="alert alert-info mt-2 border rounded-45">
+                <div class="mb-1 text-muted">
+                    <div align="right" th:text="${el.author}"></div>
+                    <div align="right" th:text="${el.date}"></div>
+                </div>
+                <p class="bg-white p-3 mr-16 mh-2 mx-4 border rounded-45" th:text="${el.text}"></p>
+                <div th:each="my_post : ${post}">
+                    <form th:action="'/blog/'+${my_post.id}+'/comments/'+${el.id}+'/remove'" method="post">
+                        <div align="right">
+                            <button class = "btn btn-warning" type="submit">Удалить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <header th:insert="blocks/footer :: footer"/>
+    </body>
+</html>
