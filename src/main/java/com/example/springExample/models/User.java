@@ -1,9 +1,11 @@
 package com.example.springExample.models;
 
+import org.hibernate.validator.constraints.Length;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -15,8 +17,14 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NotBlank(message = "Имя не должно быть пустым")
+    @Length(max = 20, min = 4, message = "Имя должно занимать от 4 до 20 символов")
     private String username;
+
+    @NotBlank(message = "Пароль пуст")
+    @Length(max = 20, min = 4, message = "Пароль должен занимать от 4 до 20 символов")
     private String password;
+
     private boolean active;
 
     @ElementCollection(targetClass = Role.class,fetch = FetchType.EAGER)
@@ -29,7 +37,6 @@ public class User implements UserDetails {
     public User(String login,String password) {
         setUsername(login);
         setPassword(password);
-        setRoles(Collections.singleton(Role.USER));
     }
 
     public Long getId() {

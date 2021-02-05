@@ -1,19 +1,28 @@
 package com.example.springExample.models;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class Post implements Datable{
+public class Post implements DatedData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @NotBlank(message = "Заголовок не должен быть пуст")
     private String title;
+
+    @NotBlank(message = "Описание не должен быть пустым")
     private String anons;
+
+    @NotBlank(message = "Текст не должен быть пуст")
     private String fullText;
+
     private String date;
 
     @OneToMany(targetEntity=Comment.class, cascade=CascadeType.ALL, fetch = FetchType.LAZY)
@@ -43,17 +52,15 @@ public class Post implements Datable{
 
     public Post(){}
 
-    public Post(String title, String anons, String full_text, String author) {
-        setAuthor(author);
+    public Post(String title, String anons, String full_text) {
         setOriginalId(getId());
-        updateDate();
         setTitle(title);
         setAnons(anons);
         setFullText(full_text);
     }
 
-    public Post(String title, String anons, String full_text, String author, Long originalId) {
-        this(title,anons,full_text,author);
+    public Post(String title, String anons, String full_text,  Long originalId) {
+        this(title,anons,full_text);
         setOriginalId(originalId);
     }
 
@@ -117,18 +124,23 @@ public class Post implements Datable{
         comments.add(comment);
     }
 
+    public void incrementViews(){
+        views++;
+    }
+
     public void removeCommentById(long commentId){
-        for(var comment:comments){
-            if(comment.getId() == commentId){
-                comments.remove(comment);
-                break;
-            }
-        }
+        comments.removeIf(comment -> comment.getId() == commentId);
     }
 
     public List<Comment>getComments(){
         return comments;
-       // return null;
+    }
+
+    public void updateAuthor(User newAuthor){
+        if (!(author.equals(newAuthor.getUsername()) || author.contains("," + newAuthor.getUsername() + ",")))
+            author = author + "," + newAuthor.getUsername();
+        if(author.length()>25)
+            author = author.substring(0,25)+",..";
     }
 
 }
