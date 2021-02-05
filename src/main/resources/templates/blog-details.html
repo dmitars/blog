@@ -9,20 +9,20 @@
     <body>
         <header th:insert="blocks/header :: header"/>
         <div class="container p-4 mt-5 bg-white">
-            <div th:each="el : ${post}" class="alert alert-info mt-2">
-                <h1 th:text="${el.title}"></h1><br>
-                <p th:text="${el.fullText}"></p>
-                <p><b>Просмотры: </b> <span th:text="''+${el.views}"/></p>
-                <a th:href="'/blog/'+${el.id}+'/edit'" class="btn btn-warning">Редактировать</a><br><br>
-                <form th:action="'/blog/'+${el.id}+'/remove'" method="post">
+            <div class="alert alert-info mt-2">
+                <h1 th:text="${post.title}"></h1><br>
+                <p th:text="${post.fullText}"></p>
+                <p><b>Просмотры: </b> <span th:text="''+${post.views}"/></p>
+                <a th:href="'/blog/'+${post.id}+'/edit'" class="btn btn-warning">Редактировать</a><br><br>
+                <form th:action="'/blog/'+${post.id}+'/remove'" method="post">
                     <button class = "btn btn-warning" type="submit">Удалить</button>
                 </form>
                 <br>
-                <form th:action="'/blog/'+${el.id}+'/comment'" method="post">
+                <form th:action="'/blog/'+${post.id}+'/comment'" method="post">
                     <textarea type="text" name="comment" placeholder="Комментарий" class="form-control"></textarea><br>
                     <button class = "btn btn-warning" type="submit">Добавить комментарий</button>
                 </form>
-                <p align="right" th:text="${el.date}"></p>
+                <p align="right" th:text="${post.date}"></p>
             </div>
         </div>
 
@@ -34,8 +34,8 @@
                     <div align="right" th:text="${el.date}"></div>
                 </div>
                 <p class="bg-white p-3 mr-16 mh-2 mx-4 border rounded-45" th:text="${el.text}"></p>
-                <div th:each="my_post : ${post}">
-                    <form th:action="'/blog/'+${my_post.id}+'/comments/'+${el.id}+'/remove'" method="post">
+                <div>
+                    <form th:action="'/blog/'+${post.id}+'/comments/'+${el.id}+'/remove'" method="post">
                         <div align="right">
                             <button class = "btn btn-warning" type="submit">Удалить</button>
                         </div>
