@@ -4,29 +4,29 @@ import com.example.springExample.models.Comment;
 import com.example.springExample.models.Post;
 import com.example.springExample.models.User;
 import com.example.springExample.repo.PostRepository;
+import com.example.springExample.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.Optional;
+import javax.validation.Valid;
 
 @Controller
 public class BlogController {
-    String message="";
+    private String message="";
 
-    @Autowired(required = true)
+    @Autowired
     private PostRepository postRepository;
 
+    @Autowired
+    private PostService postService;
+
     @GetMapping("/blog")
-    public String blog(@AuthenticationPrincipal User user, Model model) {
-        Iterable<Post> posts = postRepository.findAllChecked();
+    public String blog(Model model) {
+        Iterable<Post> posts = postService.findAllChecked();
         model.addAttribute("posts",posts);
         if(!message.equals("")){
             model.addAttribute("msg",message);
@@ -42,100 +42,74 @@ public class BlogController {
     }
 
     @PostMapping("/blog/add")
-    public String blogPostAdd(@RequestParam String title, String anons, String full_text, Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(title.length()==0 || anons.length()==0 || full_text.length()==0) {
-            model.addAttribute("msg","У вас не заполнены некоторые поля");
+    public String blogPostAdd(@AuthenticationPrincipal User user,
+                              @Valid Post post, BindingResult bindingResult, Model model) {
+        if(bindingResult.hasFieldErrors()){
+            model.addAttribute("error",ControllerUtils.getStringOfErrors(bindingResult));
             return "blog-add";
         }
-        Post post = new Post(title, anons, full_text, authentication.getName());
-        postRepository.save(post);
+        postService.addPost(post,user);
         return "redirect:/blog";
     }
 
-    @GetMapping("/blog/{id}")
-    public String blogDetails(@PathVariable(value = "id") long postId, Model model) {
-        if(!postRepository.existsById(postId))
-            return "redirect:/blog";
-        Optional<Post> post = postRepository.findById(postId);
-        Post updatedPost = post.get();
-        updatedPost.setViews(post.get().getViews()+1);
-        updatedPost.setId(post.get().getId());
-        ArrayList<Post> res = new ArrayList<>();
-        post.ifPresent(res::add);
-        postRepository.save(updatedPost);
-        model.addAttribute("post",res);
-        model.addAttribute("comments",res.get(0).getComments());
+    @GetMapping(value = "/blog/{post}")
+    public String blogDetails(@PathVariable Post post, Model model) {
+        post.incrementViews();
+        postRepository.save(post);
+        model.addAttribute("post",post);
+        model.addAttribute("comments",post.getComments());
         return "blog-details";
     }
 
-    @GetMapping("/blog/{id}/edit")
-    public String blogEdit(@PathVariable(value = "id") long postId, Model model) {
-        if(!postRepository.existsById(postId)) {
-            message = "Данного поста не существует";
-            return "redirect:/blog";
-        }
-        if(postRepository.findPostByOriginalId(postId)!=null){
+
+    @GetMapping("/blog/{post}/edit")
+    public String blogEdit(@PathVariable Post post, Model model) {
+        if(postService.findPostByOriginalId(post.getId())!=null){
             message = "Этот пост уже отредактирован. Дождитесь подтверждения";
             return "redirect:/blog";
         }
-        Optional<Post> post = postRepository.findById(postId);
-        ArrayList<Post> res = new ArrayList<>();
-        post.ifPresent(res::add);
-        model.addAttribute("post",res);
+        model.addAttribute("post",post);
         return "blog-edit";
     }
 
-    @PostMapping("/blog/{id}/edit")
-    public String blogPostUpdate(@PathVariable(value = "id") long postId, String title, String anons,
-                                 String full_text,Model model) {
-        if(title.length()==0 || anons.length()==0 || full_text.length()==0) {
-            model.addAttribute("msg","Вы не заполнили некоторые поля");
-            return "redirect:/blog/{id}/edit";
+    @PostMapping("/blog/{originalPost}/edit")
+    public String blogPostUpdate(@AuthenticationPrincipal User user,
+                                 @PathVariable Post originalPost,
+                                 @Valid Post editedPost,
+                                 BindingResult bindingResult, Model model) {
+        if(bindingResult.hasErrors()) {
+            model.addAttribute("msg",ControllerUtils.getStringOfErrors(bindingResult));
+            return "redirect:/blog/{originalPost}/edit";
         }
-        Post post = postRepository.findById(postId).orElseThrow();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String tempAuthor = post.getAuthor();
-        if (!(tempAuthor.equals(authentication.getName()) || tempAuthor.contains("," + authentication.getName() + ",")))
-            tempAuthor = tempAuthor + "," + authentication.getName();
-        if(tempAuthor.length()>25)
-            tempAuthor = tempAuthor.substring(0,25)+",..";
-        Post updatedPost = new Post(title, anons, full_text, tempAuthor, post.getId());
-        if(post.isChecked())
-            postRepository.save(updatedPost);
-        else {
-            post = updatedPost;
-        }
+        editedPost.updateAuthor(user);
+        editedPost.setOriginalId(originalPost.getId());
+        if(originalPost.isChecked())
+            postRepository.save(editedPost);
         return "redirect:/blog";
     }
 
-    @PostMapping("/blog/{id}/remove")
-    public String blogPostRemove(@PathVariable(value = "id") long postId, Model model) {
-        Post post = postRepository.findById(postId).orElseThrow();
+    @PostMapping("/blog/{post}/remove")
+    public String blogPostRemove(@PathVariable Post post) {
         postRepository.delete(post);
         return "redirect:/blog";
     }
 
     @PostMapping("/blog/{id}/comment")
-    @ResponseStatus(HttpStatus.OK)
-    public String blogPostComment(@PathVariable(value = "id") long postId, String comment, Model model) {
-        if (comment == null) {
+    public String blogPostComment(@AuthenticationPrincipal User user,
+                                  @PathVariable(value = "id") Post post,
+                                  String comment) {
+        if (comment == null || comment.isBlank()) {
             return "redirect:/blog/{id}";
         }
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Comment generatedComment = new Comment(comment, authentication.getName());
-        var post = postRepository.findById(postId).get();
+        Comment generatedComment = new Comment(comment, user.getUsername());
         post.addComment(generatedComment);
         postRepository.save(post);
         return "redirect:/blog/{id}";
     }
 
-    @RequestMapping(value = "/blog/{id}/comments/{comment_id}/remove", method = {RequestMethod.POST})
-    @ResponseStatus(HttpStatus.OK)
-    public String blogPostComment(@PathVariable(value = "id") long postId,
-                                  @PathVariable(value = "comment_id") long commentId,
-                                  String comment, Model model) {
-        var post = postRepository.findById(postId).get();
+    @RequestMapping(value = "/blog/{id}/comments/{comment_id}/remove", method = {RequestMethod.POST,RequestMethod.GET})
+    public String blogPostComment(@PathVariable(value = "id") Post post,
+                                  @PathVariable(value = "comment_id") long commentId) {
         post.removeCommentById(commentId);
         postRepository.save(post);
         return "redirect:/blog/{id}";

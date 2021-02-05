@@ -1,43 +1,45 @@
 package com.example.springExample.controllers;
 
-import com.example.springExample.models.Role;
 import com.example.springExample.models.User;
-import com.example.springExample.repo.UserRepository;
+import com.example.springExample.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Collections;
+import javax.validation.Valid;
+import java.util.stream.Collectors;
 
 @Controller
 public class RegistrationController {
+
     @Autowired
-    UserRepository userRepository;
+    UserService userService;
 
     @GetMapping("/registration")
-    public String registration(Model model){
+    public String registration(){
         return "registration";
     }
 
     @PostMapping("/registration")
-    public String addUser(@RequestParam String username, String password, String repeat_password, Model model){
-        if(!password.equals(repeat_password)){
-            model.addAttribute("login",username);
+    public String addUser(@Valid User user, BindingResult bindingResult,
+                          String repeat_password, Model model){
+        if(bindingResult.hasErrors()) {
+            model.addAttribute("message", ControllerUtils.getStringOfErrors(bindingResult));
+            return "registration";
+        }
+        if(!user.getPassword().equals(repeat_password)){
+            model.addAttribute("login",user.getUsername());
             model.addAttribute("message","Пароли не совпадают");
             return "registration";
         }
-        User user = new User(username,password);
-        User userFromDB = userRepository.findByUsername(user.getUsername());
-        if(userFromDB!=null){
+        if(!userService.addUser(user)){
             model.addAttribute("message","Данный пользователь уже зарегистрирован");
             return "registration";
         }
-        user.setActive(true);
-        user.setRoles(Collections.singleton(Role.USER));
-        userRepository.save(user);
         return "redirect:/login";
     }
 }
