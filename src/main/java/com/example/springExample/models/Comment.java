@@ -3,7 +3,7 @@ package com.example.springExample.models;
 import javax.persistence.*;
 
 @Entity
-public class Comment implements Datable{
+public class Comment implements DatedData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
